@@ -16,7 +16,8 @@
 @font-face{font-family:'Casko Luxury';src:url('fonts/CaskoLuxury-Regular.woff') format('woff'),url('fonts/CaskoLuxury-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
 @font-face{font-family:'Casko Luxury';src:url('fonts/CaskoLuxury-Italic.woff') format('woff'),url('fonts/CaskoLuxury-Italic.ttf') format('truetype');font-weight:400;font-style:italic;font-display:swap;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scrollbar-gutter:stable;}
+main section[id]{scroll-margin-top:72px;}
 
 /* ── Tokens ──
    Marrom (madeira e couro do consultório) + verde (as plantas das fotos dele).
@@ -122,7 +123,7 @@ nav.solid .logo-mark{--logo-accent:var(--wine);}
 
 /* ── Fotos com transição longa (máscara em CSS, nada embutido na imagem) ── */
 .photo{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
-.photo img{width:100%;height:calc(100% + 80px);margin-top:-40px;object-fit:cover;transform:translateY(var(--py,0px));will-change:transform;}
+.photo img{width:100%;height:calc(100% + 80px);margin-top:-40px;object-fit:cover;transform:translateY(var(--py,0px));} /* sem will-change: forçava preparar as 5 fotos grandes de uma vez na abertura */
 /* .photo-l: foto só na metade esquerda, com fade longo para a direita */
 .photo-l{right:auto;width:min(60vw,1000px);-webkit-mask-image:linear-gradient(to left,transparent 0%,rgba(0,0,0,.55) 28%,#000 60%);mask-image:linear-gradient(to left,transparent 0%,rgba(0,0,0,.55) 28%,#000 60%);}
 .photo-shade{position:absolute;inset:0;}
@@ -139,7 +140,10 @@ nav.solid .logo-mark{--logo-accent:var(--wine);}
 
 /* ── HERO ── */
 #hero{position:relative;min-height:100vh;min-height:100svh;background:var(--ink);color:var(--paper);display:flex;align-items:flex-end;overflow:hidden;}
-#hero .photo img{object-position:75% 30%;transform:translateY(var(--py,0px)) scale(var(--hs,1.08));}
+/* zoom-out da foto do topo: só CSS, na propriedade "scale" separada do parallax (transform),
+   assim a rolagem não interfere na transição e nada é recalculado por JS a cada quadro */
+#hero .photo img{object-position:75% 30%;scale:1.1;transition:opacity 1.4s ease,scale 2.8s cubic-bezier(.16,1,.3,1);}
+#hero .photo.in img{scale:1;}
 #hero .photo-shade{background:
   linear-gradient(to bottom,rgba(43,32,25,.55) 0,rgba(43,32,25,0) 160px),
   linear-gradient(to top,rgba(43,32,25,.75) 0%,rgba(43,32,25,0) 35%),
@@ -289,7 +293,8 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
 .social:hover{border-color:var(--gold);color:var(--gold);}
 .social svg{width:18px;height:18px;fill:currentColor;}
 
-.wa{position:fixed;right:28px;bottom:28px;z-index:120;width:56px;height:56px;border-radius:50%;background:#25D366;display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .3s var(--ease);}
+.wa{position:fixed;right:28px;bottom:28px;z-index:120;width:56px;height:56px;border-radius:50%;background:#25D366;display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .3s var(--ease),opacity .6s .5s,visibility .6s .5s;}
+.js-intro .wa{opacity:0;visibility:hidden;}
 .wa:hover{transform:scale(1.08);}
 .wa svg{width:26px;height:26px;color:#fff;}
 
@@ -376,8 +381,9 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
   .quote-card{padding:36px 26px;}
 }
 @media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
   .split .ln>span,.rise{transform:none!important;opacity:1!important;transition:none!important;}
-  .photo img{transform:none!important;}
+  .photo img{transform:none!important;scale:1!important;}
   .photo .fade-in{opacity:1;transition:none;}
   .step{opacity:1;}
 }
@@ -451,7 +457,7 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
 <!-- FRASES -->
 <section id="frases">
   <div class="photo photo-r">
-    <img class="fade-in" src="images/foto-frases.jpg" alt="Stênio Marques de blazer branco ao lado de plantas" loading="lazy">
+    <img class="fade-in" src="images/foto-frases.jpg" alt="Stênio Marques de blazer branco ao lado de plantas" loading="lazy" decoding="async">
     <div class="photo-shade"></div>
   </div>
   <div class="frases-in">
@@ -519,7 +525,7 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
 <!-- SOBRE -->
 <section id="sobre">
   <div class="photo photo-l">
-    <img class="fade-in" src="images/foto-sobre.jpg" alt="Stênio Marques sorrindo com seu cachorro no colo e uma calopsita no ombro" loading="lazy">
+    <img class="fade-in" src="images/foto-sobre.jpg" alt="Stênio Marques sorrindo com seu cachorro no colo e uma calopsita no ombro" loading="lazy" decoding="async">
     <div class="photo-shade"></div>
   </div>
   <div class="sobre-in">
@@ -562,12 +568,12 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
     <p class="lead rise">Indicações de leitura e provocações publicadas no Instagram.</p>
   </div>
   <div class="posts">
-    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/Dee611gFJ5g/" target="_blank" rel="noopener"><img src="images/post-02.jpg" alt="Post: Ele não sabe o partido que está perdendo" loading="lazy"></a>
-    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DYusgCxjnRq/" target="_blank" rel="noopener"><img src="images/post-12.jpg" alt="Post: como funciona a terapia de casal" loading="lazy"></a>
-    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DcTEwzZDrhy/" target="_blank" rel="noopener"><img src="images/post-08.jpg" alt="Post: Já fiz de tudo por essa relação" loading="lazy"></a>
-    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/Dc_c4NTOTg3/" target="_blank" rel="noopener"><img src="images/post-04.jpg" alt="Indicação de leitura: Apegados" loading="lazy"></a>
-    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DZpn1k9uApe/" target="_blank" rel="noopener"><img src="images/post-10.jpg" alt="Indicação de leitura: A coragem de amar" loading="lazy"></a>
-    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DfUknB2hcz4/" target="_blank" rel="noopener"><img src="images/post-01.jpg" alt="Indicação de leitura: A parte que falta" loading="lazy"></a>
+    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/Dee611gFJ5g/" target="_blank" rel="noopener"><img src="images/post-02.jpg" alt="Post: Ele não sabe o partido que está perdendo" loading="lazy" decoding="async"></a>
+    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DYusgCxjnRq/" target="_blank" rel="noopener"><img src="images/post-12.jpg" alt="Post: como funciona a terapia de casal" loading="lazy" decoding="async"></a>
+    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DcTEwzZDrhy/" target="_blank" rel="noopener"><img src="images/post-08.jpg" alt="Post: Já fiz de tudo por essa relação" loading="lazy" decoding="async"></a>
+    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/Dc_c4NTOTg3/" target="_blank" rel="noopener"><img src="images/post-04.jpg" alt="Indicação de leitura: Apegados" loading="lazy" decoding="async"></a>
+    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DZpn1k9uApe/" target="_blank" rel="noopener"><img src="images/post-10.jpg" alt="Indicação de leitura: A coragem de amar" loading="lazy" decoding="async"></a>
+    <a class="post rise" href="https://www.instagram.com/psi.steniomarques/p/DfUknB2hcz4/" target="_blank" rel="noopener"><img src="images/post-01.jpg" alt="Indicação de leitura: A parte que falta" loading="lazy" decoding="async"></a>
   </div>
   <div class="posts-more">
     <span class="hand">boa leitura!</span>
@@ -587,7 +593,7 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
 <!-- DÚVIDAS -->
 <section id="duvidas">
   <div class="photo">
-    <img class="fade-in" src="images/foto-faq.jpg" alt="" loading="lazy">
+    <img class="fade-in" src="images/foto-faq.jpg" alt="" loading="lazy" decoding="async">
     <div class="photo-shade"></div>
   </div>
   <div class="faq-in">
@@ -595,17 +601,17 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
       <h2 class="split">Dúvidas<br>frequentes</h2>
       <p class="lead rise">O que as pessoas costumam perguntar antes de começar.</p>
       <div class="qa-list">
-        <div class="qa"><button aria-expanded="false">Preciso estar em um relacionamento para fazer terapia?<span class="ico"></span></button><div class="qa-a"><div><p>Não. Muitas pessoas procuram a terapia justamente depois de um término, ou para entender por que se envolvem sempre em relações parecidas.</p></div></div></div>
-        <div class="qa"><button aria-expanded="false">Como funciona a terapia de casal?<span class="ico"></span></button><div class="qa-a"><div><p>As sessões acontecem com os dois, em um espaço seguro e imparcial, para fortalecer a comunicação, compreender os conflitos e construir novos acordos.</p></div></div></div>
-        <div class="qa"><button aria-expanded="false">E se meu parceiro não quiser ir?<span class="ico"></span></button><div class="qa-a"><div><p>Você pode começar pela terapia individual. Mudar a forma como você se posiciona já costuma transformar a dinâmica da relação.</p></div></div></div>
+        <div class="qa"><button aria-expanded="false"><span class="qa-t">Preciso estar em um relacionamento para fazer terapia?</span><span class="ico"></span></button><div class="qa-a"><div><p>Não. Muitas pessoas procuram a terapia justamente depois de um término, ou para entender por que se envolvem sempre em relações parecidas.</p></div></div></div>
+        <div class="qa"><button aria-expanded="false"><span class="qa-t">Como funciona a terapia de casal?</span><span class="ico"></span></button><div class="qa-a"><div><p>As sessões acontecem com os dois, em um espaço seguro e imparcial, para fortalecer a comunicação, compreender os conflitos e construir novos acordos.</p></div></div></div>
+        <div class="qa"><button aria-expanded="false"><span class="qa-t">E se meu parceiro não quiser ir?</span><span class="ico"></span></button><div class="qa-a"><div><p>Você pode começar pela terapia individual. Mudar a forma como você se posiciona já costuma transformar a dinâmica da relação.</p></div></div></div>
       </div>
     </div>
     <div class="faq-mid"></div>
     <div class="faq-col faq-col-r">
       <div class="qa-list">
-        <div class="qa"><button aria-expanded="false">O atendimento é presencial ou <span class="nw">on-line</span>?<span class="ico"></span></button><div class="qa-a"><div><p>Os dois. O presencial acontece em Goiânia, GO, e o <span class="nw">on-line</span> atende pessoas de qualquer lugar do Brasil.</p></div></div></div>
-        <div class="qa"><button aria-expanded="false">Quanto tempo dura o processo?<span class="ico"></span></button><div class="qa-a"><div><p>Depende de cada pessoa e do que ela traz. O processo é construído em conjunto e respeita o seu tempo.</p></div></div></div>
-        <div class="qa"><button aria-expanded="false">O que eu falar fica em sigilo?<span class="ico"></span></button><div class="qa-a"><div><p>Sim. O sigilo é um dever ético do psicólogo, previsto no Código de Ética Profissional. A sessão é um espaço seguro e sem julgamentos.</p></div></div></div>
+        <div class="qa"><button aria-expanded="false"><span class="qa-t">O atendimento é presencial ou <span class="nw">on-line</span>?</span><span class="ico"></span></button><div class="qa-a"><div><p>Os dois. O presencial acontece em Goiânia, GO, e o <span class="nw">on-line</span> atende pessoas de qualquer lugar do Brasil.</p></div></div></div>
+        <div class="qa"><button aria-expanded="false"><span class="qa-t">Quanto tempo dura o processo?</span><span class="ico"></span></button><div class="qa-a"><div><p>Depende de cada pessoa e do que ela traz. O processo é construído em conjunto e respeita o seu tempo.</p></div></div></div>
+        <div class="qa"><button aria-expanded="false"><span class="qa-t">O que eu falar fica em sigilo?</span><span class="ico"></span></button><div class="qa-a"><div><p>Sim. O sigilo é um dever ético do psicólogo, previsto no Código de Ética Profissional. A sessão é um espaço seguro e sem julgamentos.</p></div></div></div>
       </div>
     </div>
   </div>
@@ -677,11 +683,13 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
     // a foto do topo já é decodificada durante a abertura, para não travar quando a cortina sobe
     var heroPic = $('#hero .photo img');
     if (heroPic.decode) heroPic.decode().catch(function () {});
+    // o logo termina de se desenhar em ~2,5 s; o fio é calculado nesse instante parado, antes da cortina subir
+    setTimeout(function () { lastSize = document.documentElement.clientWidth + 'x' + document.documentElement.scrollHeight; buildThread(true); }, 2550);
     setTimeout(function () {
       intro.classList.add('out'); root.classList.remove('js-intro');
       sessionStorage.setItem('introVisto', '1');
       setTimeout(startHero, 450);
-      setTimeout(function () { intro.classList.add('gone'); introOn = false; rebuild(); }, 1100);
+      setTimeout(function () { intro.classList.add('gone'); introOn = false; }, 1100); // o fio já foi calculado; mudanças reais de tamanho são pegas pelo ResizeObserver
     }, 2800);
   } else {
     requestAnimationFrame(function () { requestAnimationFrame(startHero); });
@@ -762,8 +770,8 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
     return ' C ' + (x - s * 1.15) + ' ' + (y - s * .75) + ' ' + (x - s * .95) + ' ' + (y - s * 1.7) + ' ' + x + ' ' + (y - s * 1.2) +
            ' C ' + (x + s * .95) + ' ' + (y - s * 1.7) + ' ' + (x + s * 1.15) + ' ' + (y - s * .75) + ' ' + x + ' ' + y;
   }
-  function buildThread() {
-    if (introOn) return; // cálculo pesado: espera a abertura terminar
+  function buildThread(force) {
+    if (introOn && !force) return; // cálculo pesado: só roda com a abertura parada na tela
     if (innerWidth <= 960) { svg.style.display = 'none'; built = false; return; }
     svg.style.display = '';
     var W = document.documentElement.clientWidth, H = document.documentElement.scrollHeight;
@@ -785,27 +793,28 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
     d += ' C ' + x + ' ' + (py + (endY - py) * .7) + ' ' + x + ' ' + (endY - s * 2.2) + ' ' + x + ' ' + endY + heart(x, endY, s * .8);
     path.setAttribute('d', d);
     total = path.getTotalLength(); samples = [];
-    for (var l = 0, maxY = 0; l <= total; l += 10) { maxY = Math.max(maxY, path.getPointAtLength(l).y); samples.push([l, maxY]); }
+    for (var l = 0, maxY = 0; l <= total; l += 40) { maxY = Math.max(maxY, path.getPointAtLength(l).y); samples.push([l, maxY]); }
     path.style.strokeDasharray = total;
     if (reduce) drawn = total;
     path.style.strokeDashoffset = (total - drawn).toFixed(1);
     built = true;
   }
-  function lengthAtY(y) { // maior trecho do fio que ainda está acima da linha y
+  function lengthAtY(y) { // maior trecho do fio que ainda está acima da linha y (interpolado entre amostras)
     if (!samples.length || y < samples[0][1]) return 0;
     var lo = 0, hi = samples.length - 1;
     while (lo < hi) { var m = (lo + hi + 1) >> 1; if (samples[m][1] <= y) lo = m; else hi = m - 1; }
-    return samples[lo][0];
+    var a = samples[lo], b = samples[lo + 1];
+    if (!b || b[1] === a[1]) return a[0];
+    return a[0] + (b[0] - a[0]) * Math.min(1, (y - a[1]) / (b[1] - a[1]));
   }
 
   /* ── Loop: fio, parallax das fotos, linha das etapas ── */
-  var photos = $$('.photo img'), track = $('#track'), steps = $$('.step'), heroImg = $('#hero .photo img');
+  var photos = $$('.photo img'), track = $('#track'), steps = $$('.step');
   var lastY = -1, lastW = 0, lastP = -1;
   function frame(now) {
     requestAnimationFrame(frame);
     if (introOn) return; // durante a abertura a página por trás fica parada
     var vh = innerHeight, y = scrollY, moved = y !== lastY || innerWidth !== lastW;
-    var heroAnim = heroStarted && now - t0 < 1900;
     // 1) leituras de layout primeiro, só quando houve rolagem
     var reads = null, tr = null;
     if (moved) {
@@ -829,11 +838,6 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
         photos[i].style.setProperty('--py', (((r.top + r.height / 2 - vh / 2) / vh) * -60).toFixed(1) + 'px');
       });
     }
-    if (!reduce && (heroAnim || !heroStarted)) {
-      heroImg.style.setProperty('--hs', (heroStarted ? 1 + .08 * Math.max(0, 1 - (now - t0) / 1800) : 1.08).toFixed(4));
-    } else if (!reduce && heroStarted && heroImg.style.getPropertyValue('--hs') !== '1.0000') {
-      heroImg.style.setProperty('--hs', '1.0000');
-    }
     if (tr) {
       var vertical = innerWidth <= 960;
       var p = reduce ? 1 : Math.max(0, Math.min(1, vertical ? (vh * .7 - tr.top) / tr.height : (vh * .8 - tr.top) / (vh * .45)));
@@ -845,12 +849,20 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
     }
   }
 
-  var rt; function rebuild() { clearTimeout(rt); rt = setTimeout(buildThread, 120); }
+  var rt, lastSize = '';
+  function rebuild() {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var size = document.documentElement.clientWidth + 'x' + document.documentElement.scrollHeight;
+      if (size === lastSize && built) return; // imagem carregou mas nada mudou de tamanho: não refaz
+      lastSize = size; buildThread();
+    }, 150);
+  }
   addEventListener('resize', rebuild);
-  addEventListener('load', buildThread);
+  addEventListener('load', rebuild);
   if (window.ResizeObserver) new ResizeObserver(rebuild).observe(document.body);
-  if (document.fonts) document.fonts.ready.then(buildThread);
-  buildThread();
+  if (document.fonts) document.fonts.ready.then(rebuild);
+  rebuild();
   requestAnimationFrame(frame);
 })();
 </script>
