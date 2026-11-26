@@ -97,18 +97,20 @@ nav.solid .logo-mark{--logo-accent:var(--wine);}
 .burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-5px) rotate(-45deg);}
 
 /* ── Abertura ── */
+/* a cortina sobe com transform (roda na placa de vídeo); clip-path redesenhava a tela inteira a cada quadro */
 #intro{position:fixed;inset:0;z-index:300;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  clip-path:inset(0 0 0 0);transition:clip-path 1.1s cubic-bezier(.76,0,.24,1);}
-#intro.out{clip-path:inset(0 0 100% 0);}
+  transform:translateY(0);will-change:transform;transition:transform 1s cubic-bezier(.76,0,.24,1);}
+#intro.out{transform:translateY(-100%);}
+.intro-mark,.intro-name,.intro-sub{will-change:transform,opacity;}
 #intro.gone,.no-intro #intro{display:none;}
 .js-intro body{overflow:hidden;}
 .intro-mark{width:clamp(110px,14vw,150px);height:auto;overflow:visible;}
-.i-arch{fill:none;stroke:var(--gold);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:i-draw 1.3s .15s cubic-bezier(.65,0,.35,1) forwards;}
-.i-heart{fill:var(--gold);transform-box:fill-box;transform-origin:center;transform:scale(0);animation:i-pop .7s 1.1s cubic-bezier(.34,1.56,.64,1) forwards;}
-.i-m{fill:var(--paper);opacity:0;transform:translateY(14px);animation:i-up .9s .55s var(--ease) forwards;}
-.i-s{fill:var(--gold);opacity:0;transform-box:fill-box;transform-origin:center;transform:rotate(-14deg) scale(.86);animation:i-s 1s .8s var(--ease) forwards;}
-.intro-name{font-family:var(--serif);font-size:clamp(1.4rem,2.4vw,1.9rem);color:var(--paper);opacity:0;transform:translateY(10px);animation:i-up .9s 1.25s var(--ease) forwards;}
-.intro-sub{font-size:14px;color:var(--on-dark-2);opacity:0;animation:i-up .9s 1.45s var(--ease) forwards;}
+.i-arch{fill:none;stroke:var(--gold);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:i-draw 1.3s .45s cubic-bezier(.65,0,.35,1) forwards;}
+.i-heart{fill:var(--gold);transform-box:fill-box;transform-origin:center;transform:scale(0);animation:i-pop .7s 1.4s cubic-bezier(.34,1.56,.64,1) forwards;}
+.i-m{fill:var(--paper);opacity:0;transform:translateY(14px);animation:i-up .9s .85s var(--ease) forwards;}
+.i-s{fill:var(--gold);opacity:0;transform-box:fill-box;transform-origin:center;transform:rotate(-14deg) scale(.86);animation:i-s 1s 1.1s var(--ease) forwards;}
+.intro-name{font-family:var(--serif);font-size:clamp(1.4rem,2.4vw,1.9rem);color:var(--paper);opacity:0;transform:translateY(10px);animation:i-up .9s 1.55s var(--ease) forwards;}
+.intro-sub{font-size:14px;color:var(--on-dark-2);opacity:0;animation:i-up .9s 1.75s var(--ease) forwards;}
 @keyframes i-draw{to{stroke-dashoffset:0}}
 @keyframes i-pop{to{transform:scale(1)}}
 @keyframes i-up{to{opacity:1;transform:none}}
@@ -669,15 +671,18 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
   function startHero() {
     if (heroStarted) return; heroStarted = true; t0 = performance.now();
     $$('#hero .rise, #hero .split, #hero .photo').forEach(function (el) { el.classList.add('in'); });
-    }
-  var intro = $('#intro'), root = document.documentElement;
-  if (root.classList.contains('js-intro')) {
+  }
+  var intro = $('#intro'), root = document.documentElement, introOn = root.classList.contains('js-intro');
+  if (introOn) {
+    // a foto do topo já é decodificada durante a abertura, para não travar quando a cortina sobe
+    var heroPic = $('#hero .photo img');
+    if (heroPic.decode) heroPic.decode().catch(function () {});
     setTimeout(function () {
       intro.classList.add('out'); root.classList.remove('js-intro');
       sessionStorage.setItem('introVisto', '1');
-      setTimeout(startHero, 350);
-      setTimeout(function () { intro.classList.add('gone'); }, 1200);
-    }, 2500);
+      setTimeout(startHero, 450);
+      setTimeout(function () { intro.classList.add('gone'); introOn = false; rebuild(); }, 1100);
+    }, 2800);
   } else {
     requestAnimationFrame(function () { requestAnimationFrame(startHero); });
   }
@@ -758,6 +763,7 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
            ' C ' + (x + s * .95) + ' ' + (y - s * 1.7) + ' ' + (x + s * 1.15) + ' ' + (y - s * .75) + ' ' + x + ' ' + y;
   }
   function buildThread() {
+    if (introOn) return; // cálculo pesado: espera a abertura terminar
     if (innerWidth <= 960) { svg.style.display = 'none'; built = false; return; }
     svg.style.display = '';
     var W = document.documentElement.clientWidth, H = document.documentElement.scrollHeight;
@@ -779,7 +785,7 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
     d += ' C ' + x + ' ' + (py + (endY - py) * .7) + ' ' + x + ' ' + (endY - s * 2.2) + ' ' + x + ' ' + endY + heart(x, endY, s * .8);
     path.setAttribute('d', d);
     total = path.getTotalLength(); samples = [];
-    for (var l = 0, maxY = 0; l <= total; l += 6) { maxY = Math.max(maxY, path.getPointAtLength(l).y); samples.push([l, maxY]); }
+    for (var l = 0, maxY = 0; l <= total; l += 10) { maxY = Math.max(maxY, path.getPointAtLength(l).y); samples.push([l, maxY]); }
     path.style.strokeDasharray = total;
     if (reduce) drawn = total;
     path.style.strokeDashoffset = (total - drawn).toFixed(1);
@@ -794,28 +800,49 @@ footer{background:var(--ink-3);color:var(--on-dark);padding:88px var(--gutter) 0
 
   /* ── Loop: fio, parallax das fotos, linha das etapas ── */
   var photos = $$('.photo img'), track = $('#track'), steps = $$('.step'), heroImg = $('#hero .photo img');
+  var lastY = -1, lastW = 0, lastP = -1;
   function frame(now) {
-    var vh = innerHeight;
-    if (built && !reduce) {
-      var target = lengthAtY(scrollY + vh * .72);
-      var intro = heroStarted ? Math.min(1, (now - t0) / 2200) : 0;
-      var goal = intro < 1 ? Math.min(target, total * (1 - Math.pow(1 - intro, 3))) : target;
-      drawn += (goal - drawn) * .12;
-      path.style.strokeDashoffset = (total - drawn).toFixed(1);
-    }
-    if (!reduce) {
-      photos.forEach(function (img) {
-        var r = img.parentElement.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > vh) return;
-        img.style.setProperty('--py', (((r.top + r.height / 2 - vh / 2) / vh) * -60).toFixed(1) + 'px');
-      });
-      heroImg.style.setProperty('--hs', (heroStarted ? 1 + .08 * Math.max(0, 1 - (now - t0) / 1800) : 1.08).toFixed(4));
-    }
-    var tr = track.getBoundingClientRect(), vertical = innerWidth <= 960;
-    var p = reduce ? 1 : Math.max(0, Math.min(1, vertical ? (vh * .7 - tr.top) / tr.height : (vh * .8 - tr.top) / (vh * .45)));
-    track.style.setProperty('--p', p.toFixed(3));
-    steps.forEach(function (st, i) { st.classList.toggle('on', p >= (vertical ? i / steps.length : i / (steps.length - 1)) - .001); });
     requestAnimationFrame(frame);
+    if (introOn) return; // durante a abertura a página por trás fica parada
+    var vh = innerHeight, y = scrollY, moved = y !== lastY || innerWidth !== lastW;
+    var heroAnim = heroStarted && now - t0 < 1900;
+    // 1) leituras de layout primeiro, só quando houve rolagem
+    var reads = null, tr = null;
+    if (moved) {
+      reads = photos.map(function (img) { return img.parentElement.getBoundingClientRect(); });
+      tr = track.getBoundingClientRect();
+      lastY = y; lastW = innerWidth;
+    }
+    // 2) depois só escritas (evita recalcular o layout várias vezes no mesmo quadro)
+    if (built && !reduce) {
+      var target = lengthAtY(y + vh * .72);
+      var k = heroStarted ? Math.min(1, (now - t0) / 2200) : 0;
+      var goal = k < 1 ? Math.min(target, total * (1 - Math.pow(1 - k, 3))) : target;
+      if (Math.abs(goal - drawn) > .5) {
+        drawn += (goal - drawn) * .12;
+        path.style.strokeDashoffset = (total - drawn).toFixed(1);
+      }
+    }
+    if (!reduce && reads) {
+      reads.forEach(function (r, i) {
+        if (r.bottom < 0 || r.top > vh) return;
+        photos[i].style.setProperty('--py', (((r.top + r.height / 2 - vh / 2) / vh) * -60).toFixed(1) + 'px');
+      });
+    }
+    if (!reduce && (heroAnim || !heroStarted)) {
+      heroImg.style.setProperty('--hs', (heroStarted ? 1 + .08 * Math.max(0, 1 - (now - t0) / 1800) : 1.08).toFixed(4));
+    } else if (!reduce && heroStarted && heroImg.style.getPropertyValue('--hs') !== '1.0000') {
+      heroImg.style.setProperty('--hs', '1.0000');
+    }
+    if (tr) {
+      var vertical = innerWidth <= 960;
+      var p = reduce ? 1 : Math.max(0, Math.min(1, vertical ? (vh * .7 - tr.top) / tr.height : (vh * .8 - tr.top) / (vh * .45)));
+      if (p !== lastP) {
+        lastP = p;
+        track.style.setProperty('--p', p.toFixed(3));
+        steps.forEach(function (st, i) { st.classList.toggle('on', p >= (vertical ? i / steps.length : i / (steps.length - 1)) - .001); });
+      }
+    }
   }
 
   var rt; function rebuild() { clearTimeout(rt); rt = setTimeout(buildThread, 120); }
